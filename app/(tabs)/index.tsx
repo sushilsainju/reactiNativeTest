@@ -13,7 +13,9 @@ import {
 import SearchBar from "../components/SearchBar";
 
 import MovieCard from "../components/MovieCard";
-import fetchMovies from "../services/api";
+import TrendingCard from "../components/TrendingCard";
+import { fetchMovies } from "../services/api";
+import { getTrendingSearches } from "../services/appwrite";
 import { useFetch } from "../services/useFetch";
 
 export default function Index() {
@@ -25,8 +27,14 @@ export default function Index() {
     loading,
     refetch,
     reset,
-  } = useFetch(fetchMovies, true);
-  console.log("Movies ayo:", movies);
+  } = useFetch(() => fetchMovies({ query: "" }), true);
+
+  const {
+    data: trendingMovies,
+    error: trendingError,
+    loading: trendingLoading,
+  } = useFetch(getTrendingSearches, true);
+
   return (
     <View className="flex-1 bg-primary ">
       <Image source={images.bg} className="absolute w-full z-0" />
@@ -43,23 +51,45 @@ export default function Index() {
               router.push("/search");
             }}
           />
+
+          <Text className="text-white font-semibold text-lg mt-6">
+            Trending Movies
+          </Text>
+          {trendingMovies && trendingMovies.length > 0 && (
+            <FlatList
+              data={trendingMovies}
+              renderItem={({ item, index }) => (
+                <TrendingCard movie={item} index={index} />
+              )}
+              keyExtractor={(item) => item.movie_id.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="mt-2"
+              contentContainerStyle={{ paddingRight: 20, gap: 20 }}
+            />
+          )}
           {loading && <ActivityIndicator size="large" color="#fff" />}
           {error && <Text>Error: {error.message}</Text>}
           {movies && (
-            <FlatList
-              data={movies.results}
-              renderItem={({ item }) => <MovieCard {...item} />}
-              keyExtractor={(item) => item.id.toString()}
-              numColumns={3}
-              columnWrapperStyle={{
-                justifyContent: "flex-start",
-                gap: 20,
-                paddingRight: 5,
-                marginBottom: 10,
-              }}
-              className="mt-2 pb-32"
-              scrollEnabled={false}
-            />
+            <View>
+              <Text className="text-white font-semibold text-lg mt-2">
+                Latest Movies
+              </Text>
+              <FlatList
+                data={movies}
+                renderItem={({ item }) => <MovieCard {...item} />}
+                keyExtractor={(item) => item.id.toString()}
+                numColumns={3}
+                columnWrapperStyle={{
+                  justifyContent: "flex-start",
+                  gap: 20,
+                  paddingRight: 5,
+                  marginBottom: 10,
+                }}
+                className="mt-2 pb-32"
+                scrollEnabled={false}
+              />
+            </View>
           )}
         </View>
       </ScrollView>
